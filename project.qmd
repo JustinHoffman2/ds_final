@@ -1,4 +1,29 @@
 ```{r}
-print("hello")
+library(tidyverse)
+```
+
+```{r}
+tracks <- read_csv('./data/tracks.csv', show_col_types = FALSE)
+charts <- read_csv('./data/charts.csv', show_col_types = FALSE)
+```
+
+```{r}
+charts <- charts |>
+  filter(year(date) == 2021 | year(date) == 2020) |>
+  select(-`last-week`, -`peak-rank`)
+
+tracks <- tracks |>
+  select(-track_id, -...1, -popularity, -album_name) |>
+  distinct(artists, track_name, .keep_all = TRUE)
+```
+
+```{r}
+tracks_in <- tracks |>
+  filter(track_name %in% charts$song)
+
+set.seed(100)
+tracks_out <- tracks |>
+  filter(!track_name %in% charts$song)
+tracks_out <- tracks_out |> sample_n(8618)
 ```
 
