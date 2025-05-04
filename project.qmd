@@ -1,7 +1,6 @@
 
 ```{r}
 library(tidyverse)
-library(caret)
 ```
 
 ```{r}
@@ -37,7 +36,7 @@ outside <- tracks_csv |>
 
 # Combine data frames
 tracks <- rbind(inside, outside)
-tracks <- tracks_clean |> arrange(track_name)
+tracks <- tracks |> arrange(track_name)
 ```
 
 ```{r}
@@ -79,6 +78,5 @@ tracks_filtered <- tracks |>
 ```
 
 ```{r}
-
 ```
 
