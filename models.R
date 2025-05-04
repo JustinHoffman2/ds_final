@@ -1,28 +1,22 @@
-
-```{r}
 library(tidyverse)
-library(caret)
-```
-
-```{r}
+library(tidymodels)
 tracks_csv <- read_csv('./data/tracks.csv', show_col_types = FALSE)
 charts <- read_csv('./data/charts.csv', show_col_types = FALSE)
-```
 
-```{r}
+
 # Filter charts data frame
 charts <- charts |>
   filter(year(date) == 2021 | year(date) == 2020)
 
-# Clean tracks data frame
+# Clean tracks data framen
 tracks_csv <- tracks_csv |>
   select(-track_id, -...1, -popularity, -album_name) |>
   distinct(artists, track_name, .keep_all = TRUE) |>
   mutate(explicit = as.factor(explicit)) |>
   mutate(track_genre = as.factor(track_genre))
-```
 
-```{r}
+
+
 # Filter songs inside top 100
 inside <- tracks_csv |>
   filter(track_name %in% charts$song) |>
@@ -37,48 +31,47 @@ outside <- tracks_csv |>
 
 # Combine data frames
 tracks <- rbind(inside, outside)
+print(tracks['top_100'])
 tracks <- tracks |> arrange(track_name)
-```
+print(tracks)
 
-```{r}
-# Select only numeric columns (excluding 'top_100' if it's already numeric)
+
+
 numeric_cols <- tracks |> 
   select(where(is.numeric)) |> 
-  select(-top_100)  # Exclude target if it's numeric
+  select(-top_100)
 
-# Calculate correlation
 cor_df <- cor(numeric_cols, tracks$top_100) |>
   as.data.frame() |>
   rename(correlation = V1) |>
   arrange(desc(abs(correlation)))
-```
 
-```{r}
-# Plot correlation
-ggplot(cor_df, aes(x = reorder(row.names(cor_df), -abs(correlation)), y = correlation, 
-                   fill = ifelse(correlation > 0, "Positive", "Negative"))) +
-  geom_bar(stat = "identity") +
-  geom_text(aes(label = round(correlation, 2)), vjust = -0.5, size = 3) +  # Add values on bars
-  scale_fill_manual(values = c("Positive" = "steelblue", "Negative" = "tomato")) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none") +
-  labs(
-    title = "Feature Correlation with Top 100 Status",
-    x = "Feature",
-    y = "Correlation Coefficient",
-  )
-```
 
-```{r}
-# Remove low correlation features
 removed_features <- cor_df |> 
   filter(abs(correlation) <= 0.01)
 removed_features <- rownames(removed_features)
 tracks_filtered <- tracks |>
   select(-all_of(removed_features))
-```
 
-```{r}
 
-```
+print(tracks_filtered)
+
+library(tidymodels) 
+
+tracks_filtered$duration_ms <- as.factor(tracks_filtered$duration_ms)
+tracks_filtered$top_100 <- as.factor(tracks_filtered$top_100)
+
+
+knn_recipe <- recipe(top_100 ~ duration_ms, data = tracks_filtered) |> 
+  step_normalize(all_numeric_predictors())
+knn_mdl <- nearest_neighbor(mode = "classification", neighbors = 3)
+
+knn_out <- workflow() |> 
+  add_recipe(knn_recipe) |> 
+  add_model(knn_mdl) |> 
+  fit(data = tracks_filtered)
+
+
+
+
 
