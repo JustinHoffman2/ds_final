@@ -92,3 +92,81 @@ df_split <-
 train_data <- rsample::training(df_split)
 test_data <- rsample::testing(df_split)
 ```
+
+```{r}
+lr_model <- glm(top_100 ~ ., data = train_data, family = "binomial")
+```
+
+```{r}
+# Test logistic model
+ test_data$pred_prob_top100 <- predict(lr_model, newdata = test_data, type = "response")
+ test_data$pred_top100 <- ifelse(test_data$pred_prob_top100 > 0.5, 1, 0)
+ 
+ # Extract coefficients from model
+ coef_summary <- summary(lr_model)$coefficients
+ 
+ # Convert to a clean data frame
+ coef_df <- data.frame(
+   feature = rownames(coef_summary),
+   estimate = coef_summary[, "Estimate"],
+   std_error = coef_summary[, "Std. Error"],
+   p_value = coef_summary[, "Pr(>|z|)"]
+ ) %>% 
+   filter(feature != "(Intercept)")
+ 
+ # Plot results from model
+ ggplot(coef_df, aes(x = reorder(feature, estimate), y = estimate, 
+                    fill = estimate > 0)) +
+   geom_bar(stat = "identity") +
+   geom_errorbar(aes(ymin = estimate - std_error, ymax = estimate + std_error),
+                 width = 0.2) +
+   scale_fill_manual(values = c("tomato", "steelblue")) +
+   coord_flip() +
+   labs(title = "What Predicts a Spotify Top 100 Hit?",
+        subtitle = "Blue = increases odds, Red = decreases odds",
+        x = "",
+        y = "Log-Odds Coefficient") +
+   theme_minimal() +
+   theme(legend.position = "none")
+ 
+ # Generate confusion matrix
+ cm <- confusionMatrix(as.factor(test_data$pred_top100), 
+                       as.factor(test_data$top_100), 
+                       positive = "1")
+ 
+ # Print metrics
+ print(cm)
+ 
+ # Visualize (heatmap)
+ cm_data <- as.data.frame(cm$table)
+ ggplot(cm_data, aes(x = Reference, y = Prediction, fill = Freq)) +
+   geom_tile() +
+   geom_text(aes(label = Freq), color = "white", size = 10) +
+   scale_fill_gradient(low = "darkblue", high = "steelblue") +
+   labs(title = "Confusion Matrix",
+        subtitle = paste("Accuracy =", round(cm$overall["Accuracy"], 2))) +
+   theme_minimal()
+ 
+ # Calculate ROC
+ roc_obj <- roc(test_data$top_100, test_data$pred_top100)
+ 
+ # Plot ROC
+ ggroc(roc_obj, color = "steelblue", size = 1.5) +
+   geom_abline(slope = 1, intercept = 1, linetype = "dashed", color = "red") +
+   labs(title = "ROC Curve",
+        x = "False Positive Rate (1 - Specificity)",
+        y = "True Positive Rate (Recall)") +
+   theme_minimal()
+```
+```{r}
+
+mean(tracks_csv$loudness)
+mean(tracks_csv$danceability)
+mean(tracks_csv$liveness)
+mean(tracks_csv$acousticness)
+mean(tracks_csv$valence)
+
+
+
+```
+
