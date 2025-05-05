@@ -151,8 +151,10 @@ new_song <- tibble(
 
 print(predict(xgb_fit, new_data = new_song))
 
-# Extract the recipe and bake it to get the actual feature names
-baked_data <- bake(prep(xgb_recipe), new_data = df_trn)
+
+#imporatance graph -----
+baked_data <- bake(prep(xgb_recipe), new_data = NULL)
 feature_names <- colnames(baked_data)[colnames(baked_data) != "top_100"]
+xgb_model <- extract_fit_parsnip(xgb_fit)$fit
 importance_matrix <- xgb.importance(model = xgb_model, feature_names = feature_names)
-xgb.plot.importance(importance_matrix, top_n = 20, measure = "Gain")
+xgb.plot.importance(importance_matrix)
