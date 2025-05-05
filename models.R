@@ -1,9 +1,6 @@
 library(tidyverse)
 library(tidymodels)
-<<<<<<< HEAD
 
-=======
->>>>>>> 1118b13279b02f7ba4e64c1cbaddb6f834ef0fed
 tracks_csv <- read_csv('./data/tracks.csv', show_col_types = FALSE)
 charts <- read_csv('./data/charts.csv', show_col_types = FALSE)
 
@@ -30,16 +27,11 @@ inside <- tracks_csv |>
 set.seed(100)
 outside <- tracks_csv |>
   filter(!track_name %in% charts$song) |>
-<<<<<<< HEAD
   sample_n(2000) |>
   mutate(top_100 = 0)
-
-
-=======
   sample_n(8918) |>
   mutate(top_100 = 0)
 
->>>>>>> 1118b13279b02f7ba4e64c1cbaddb6f834ef0fed
 # Combine data frames
 tracks <- rbind(inside, outside)
 print(tracks['top_100'])
@@ -72,7 +64,7 @@ library(tidymodels)
 tracks_filtered$duration_ms <- as.factor(tracks_filtered$duration_ms)
 tracks_filtered$top_100 <- as.factor(tracks_filtered$top_100)
 
-<<<<<<< HEAD
+
 data_split <- initial_split(tracks_filtered, prop = 0.1, strata = top_100)  # stratify if classification
 df_trn <- training(data_split)
 df_test <- testing(data_split)
@@ -133,7 +125,7 @@ ggplot(cm_df, aes(x = Prediction, y = Truth, fill = Freq)) +
     fill = "Count"
   ) +
   theme_minimal()
-=======
+
 
 knn_recipe <- recipe(top_100 ~ duration_ms, data = tracks_filtered) |> 
   step_normalize(all_numeric_predictors())
@@ -144,4 +136,3 @@ knn_out <- workflow() |>
   add_model(knn_mdl) |> 
   fit(data = tracks_filtered)
 
->>>>>>> 1118b13279b02f7ba4e64c1cbaddb6f834ef0fed
