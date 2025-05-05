@@ -115,19 +115,22 @@ library(ggplot2)
 cm <- conf_mat(preds, truth = top_100, estimate = .pred_class)
 cm_df <- as.data.frame(cm$table)
 
-print(colnames(cm_df))
-
 ggplot(cm_df, aes(x = Prediction, y = Truth, fill = Freq)) +
-  geom_tile(color = "white") +
+  geom_tile(color = "black", linewidth = 1.2) +
   geom_text(aes(label = Freq), size = 5) +
-  scale_fill_gradient(low = "white", high = "steelblue") +
+  scale_fill_gradient(low = "white", high = "blue") +
   labs(
     title = "Confusion Matrix KNN",
     x = "Predicted Class",
     y = "Actual Class",
     fill = "Count"
   ) +
-  theme_minimal()
+  theme_minimal(base_size = 16) +   theme(
+    plot.background = element_rect(fill = "#f0f0f0", color = NA),     # Background outside plot
+    panel.background = element_rect(fill = "#f7f7f7", color = NA),    # Background inside plot
+    panel.grid.major = element_line(color = "#000050"),               # Gridline color
+    panel.grid.minor = element_blank()
+  )
 
 
 probs <- predict(knn_out, new_data = test_small, type = "prob")
@@ -135,6 +138,8 @@ probs <- predict(knn_out, new_data = test_small, type = "prob")
 roc_data <- bind_cols(test_small, probs)
 
 roc_df <- roc_curve(roc_data, truth = top_100, .pred_0)
+
+
 
 ggplot(roc_df, aes(x = 1 - specificity, y = sensitivity)) +
   geom_path(color = "blue", linewidth = 1.2) +
@@ -145,13 +150,11 @@ ggplot(roc_df, aes(x = 1 - specificity, y = sensitivity)) +
     x = "False Positive Rate",
     y = "True Positive Rate"
   ) +
-  theme_minimal()
-
-
-
-
-
-
-
-
+  theme_minimal(base_size = 16) +
+  theme(
+    plot.background = element_rect(fill = "#f0f0f0", color = NA),     # Background outside plot
+    panel.background = element_rect(fill = "#f7f7f7", color = NA),    # Background inside plot
+    panel.grid.major = element_line(color = "#000050"),               # Gridline color
+    panel.grid.minor = element_blank()
+  )
 

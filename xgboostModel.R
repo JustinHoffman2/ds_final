@@ -104,16 +104,21 @@ cm <- conf_mat(xgb_preds, truth = top_100, estimate = .pred_class)
 cm_df <- as.data.frame(cm$table)
 
 ggplot(cm_df, aes(x = Prediction, y = Truth, fill = Freq)) +
-  geom_tile(color = "white") +
+  geom_tile(color = "black", linewidth = 1.2) +
   geom_text(aes(label = Freq), size = 5) +
-  scale_fill_gradient(low = "white", high = "steelblue") +
+  scale_fill_gradient(low = "white", high = "blue") +
   labs(
     title = "Confusion Matrix XGBoost",
     x = "Predicted Class",
     y = "Actual Class",
     fill = "Count"
   ) +
-  theme_minimal()
+  theme_minimal(base_size = 16) +   theme(
+    plot.background = element_rect(fill = "#f0f0f0", color = NA),     # Background outside plot
+    panel.background = element_rect(fill = "#f7f7f7", color = NA),    # Background inside plot
+    panel.grid.major = element_line(color = "#000050"),               # Gridline color
+    panel.grid.minor = element_blank()
+  )
 
 
 
@@ -134,7 +139,13 @@ ggplot(roc_df, aes(x = 1 - specificity, y = sensitivity)) +
     x = "False Positive Rate",
     y = "True Positive Rate"
   ) +
-  theme_minimal()
+  theme_minimal(base_size = 16) +
+  theme(
+    plot.background = element_rect(fill = "#f0f0f0", color = NA),     # Background outside plot
+    panel.background = element_rect(fill = "#f7f7f7", color = NA),    # Background inside plot
+    panel.grid.major = element_line(color = "#000050"),               # Gridline color
+    panel.grid.minor = element_blank()
+  )
 
 new_song <- tibble(
   duration_ms = 210000,
@@ -157,4 +168,26 @@ baked_data <- bake(prep(xgb_recipe), new_data = NULL)
 feature_names <- colnames(baked_data)[colnames(baked_data) != "top_100"]
 xgb_model <- extract_fit_parsnip(xgb_fit)$fit
 importance_matrix <- xgb.importance(model = xgb_model, feature_names = feature_names)
-xgb.plot.importance(importance_matrix)
+
+importance_df <- as.data.frame(importance_matrix)
+
+importance_df <- as.data.frame(importance_matrix) |>
+  arrange(desc(Gain)) |>
+  slice_head(n = 20)
+
+
+ggplot(importance_df, aes(x = reorder(Feature, Gain), y = Gain, fill = Feature)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  labs(
+    title = "Top 20 Feature Importances (XGBoost)",
+    x = "Feature",
+    y = "Gain"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.background = element_rect(fill = "#f0f0f0", color = NA),     # Background outside plot
+    panel.background = element_rect(fill = "#f7f7f7", color = NA),    # Background inside plot
+    panel.grid.major = element_line(color = "#000050"),               # Gridline color
+    panel.grid.minor = element_blank()
+  )
