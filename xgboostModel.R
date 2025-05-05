@@ -27,9 +27,7 @@ inside <- tracks_csv |>
 
 outside <- tracks_csv |>
   filter(!track_name %in% charts$song) |>
-  sample_n(2000) |>
-  mutate(top_100 = 0) |>
-  sample_n(2000) |>
+  sample_n(5000) |>
   mutate(top_100 = 0)
 
 # Combine data frames
@@ -64,72 +62,13 @@ library(tidymodels)
 tracks_filtered$top_100 <- as.factor(tracks_filtered$top_100)
 
 
-data_split <- initial_split(tracks_filtered, prop = 0.1, strata = top_100)  # stratify if classification
+data_split <- initial_split(tracks_filtered, prop = 0.8, strata = top_100)  # stratify if classification
 df_trn <- training(data_split)
 df_test <- testing(data_split)
 
-#Try to get better trainign data
-df_trn <- df_trn |> 
-  group_by(top_100) |> 
-  sample_n(min(n())) |> 
-  ungroup()
 
 library(dplyr)
 
-test_small <- sample_n(df_test, 1500)
-
-
-
-knn_recipe <- recipe(top_100 ~ duration_ms + explicit + danceability + energy +
-                       loudness + speechiness + acousticness + liveness +
-                       valence + track_genre,
-                     data = df_trn) |>
-  step_dummy(all_nominal_predictors()) |>  # encode factors like track_genre
-  step_normalize(all_numeric_predictors()) 
-
-knn_mdl <- nearest_neighbor(mode = "classification", neighbors = 3)
-
-
-
-knn_out <- workflow() |> 
-  add_recipe(knn_recipe) |> 
-  add_model(knn_mdl) |> 
-  fit(data = df_trn)
-
-preds <- predict(knn_out, new_data = test_small) |> 
-  bind_cols(test_small)
-
-library(yardstick)
-
-accuracy(preds, truth = top_100, estimate = .pred_class)
-cm <- conf_mat(preds, truth = top_100, estimate = .pred_class)
-
-
-metrics(preds, truth = top_100, estimate = .pred_class)
-print(metrics)
-
-library(yardstick)
-library(ggplot2)
-
-# Compute the confusion matrix
-cm <- conf_mat(preds, truth = top_100, estimate = .pred_class)
-
-# Convert to data frame
-cm_df <- as.data.frame(cm$table)
-
-print(colnames(cm_df))
-
-ggplot(cm_df, aes(x = Prediction, y = Truth, fill = Freq)) +
-  geom_tile(color = "white") +
-  geom_text(aes(label = Freq), size = 5) +
-  scale_fill_gradient(low = "white", high = "steelblue") +
-  labs(
-    title = "Confusion Matrix",
-    x = "Predicted Class",
-    y = "Actual Class",
-    fill = "Count"
-  ) +
-  theme_minimal()
 
 xgb_mdl <- boost_tree(
   mode = "classification",
@@ -156,11 +95,10 @@ xgb_fit <- fit(xgb_wf, data = df_trn)
 xgb_preds <- predict(xgb_fit, new_data = df_test, type = "class") |> 
   bind_cols(df_test)
 
-# Accuracy
 accuracy(xgb_preds, truth = top_100, estimate = .pred_class)
 
-# Confusion matrix
-conf_mat(xgb_preds, truth = top_100, estimate = .pred_class)
+cm <- conf_mat(xgb_preds, truth = top_100, estimate = .pred_class)
+cm_df <- as.data.frame(cm$table)
 
 ggplot(cm_df, aes(x = Prediction, y = Truth, fill = Freq)) +
   geom_tile(color = "white") +
@@ -173,7 +111,5 @@ ggplot(cm_df, aes(x = Prediction, y = Truth, fill = Freq)) +
     fill = "Count"
   ) +
   theme_minimal()
-
-
 
 
