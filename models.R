@@ -64,7 +64,7 @@ library(tidymodels)
 tracks_filtered$top_100 <- as.factor(tracks_filtered$top_100)
 
 
-data_split <- initial_split(tracks_filtered, prop = 0.1, strata = top_100)  # stratify if classification
+data_split <- initial_split(tracks_filtered, prop = 0.8, strata = top_100)  # stratify if classification
 df_trn <- training(data_split)
 df_test <- testing(data_split)
 
@@ -76,7 +76,7 @@ df_trn <- df_trn |>
 
 library(dplyr)
 
-test_small <- sample_n(df_test, 1500)
+test_small <- df_test
 
 
 
@@ -111,10 +111,8 @@ print(metrics(preds, truth = top_100, estimate = .pred_class))
 library(yardstick)
 library(ggplot2)
 
-# Compute the confusion matrix
+#confusion matrix
 cm <- conf_mat(preds, truth = top_100, estimate = .pred_class)
-
-# Convert to data frame
 cm_df <- as.data.frame(cm$table)
 
 print(colnames(cm_df))
@@ -130,6 +128,28 @@ ggplot(cm_df, aes(x = Prediction, y = Truth, fill = Freq)) +
     fill = "Count"
   ) +
   theme_minimal()
+
+
+probs <- predict(knn_out, new_data = test_small, type = "prob")
+
+roc_data <- bind_cols(test_small, probs)
+
+roc_df <- roc_curve(roc_data, truth = top_100, .pred_0)
+
+ggplot(roc_df, aes(x = 1 - specificity, y = sensitivity)) +
+  geom_path(color = "blue", linewidth = 1.2) +
+  geom_abline(linetype = "dashed", color = "gray") +
+  coord_equal() +
+  labs(
+    title = "ROC Curve for KNN",
+    x = "False Positive Rate",
+    y = "True Positive Rate"
+  ) +
+  theme_minimal()
+
+
+
+
 
 
 

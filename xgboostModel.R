@@ -35,7 +35,7 @@ tracks <- rbind(inside, outside)
 print(tracks['top_100'])
 tracks <- tracks |> arrange(track_name)
 
-
+tracks <- tracks |> select(-track_genre)
 
 
 numeric_cols <- tracks |> 
@@ -80,7 +80,7 @@ xgb_mdl <- boost_tree(
 
 xgb_recipe <- recipe(top_100 ~ duration_ms + explicit + danceability + energy +
                        loudness + speechiness + acousticness + liveness +
-                       valence + track_genre,
+                       valence,
                      data = df_trn) |> 
   step_dummy(all_nominal_predictors()) |> 
   step_zv() |> 
@@ -122,9 +122,9 @@ library(pROC)
 xgb_probs <- predict(xgb_fit, new_data = df_test, type = "prob") |> 
   bind_cols(df_test)
 
-# Generate ROC curve data
+
 roc_df <- roc_curve(xgb_probs, truth = top_100, .pred_0)
-# Plot ROC
+
 ggplot(roc_df, aes(x = 1 - specificity, y = sensitivity)) +
   geom_path(color = "blue", linewidth = 1.2) +
   geom_abline(linetype = "dashed", color = "gray") +
@@ -150,3 +150,9 @@ new_song <- tibble(
 )
 
 print(predict(xgb_fit, new_data = new_song))
+
+# Extract the recipe and bake it to get the actual feature names
+baked_data <- bake(prep(xgb_recipe), new_data = df_trn)
+feature_names <- colnames(baked_data)[colnames(baked_data) != "top_100"]
+importance_matrix <- xgb.importance(model = xgb_model, feature_names = feature_names)
+xgb.plot.importance(importance_matrix, top_n = 20, measure = "Gain")
