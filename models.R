@@ -80,6 +80,63 @@ test_small <- df_test
 
 
 
+ggplot(tracks_filtered, aes(x = top_100, y = danceability, fill = top_100)) +
+  geom_boxplot() +
+  labs(title = "Danceability vs Top 100 status") +
+  theme_minimal()
+
+ggplot(tracks_filtered, aes(x = top_100, y = valence, fill = top_100)) +
+  geom_boxplot() +
+  labs(title = "valence vs Top 100 status") +
+  theme_minimal()
+
+ggplot(tracks_filtered, aes(x = top_100, y = duration_ms, fill = top_100)) +
+  geom_boxplot() +
+  labs(title = "duration_ms vs Top 100 status") +
+  theme_minimal()
+
+ggplot(tracks_filtered, aes(x = top_100, y = explicit, fill = top_100)) +
+  geom_boxplot() +
+  labs(title = "explicity vs Top 100 status") +
+  theme_minimal()
+
+ggplot(tracks_filtered, aes(x = top_100, y = energy, fill = top_100)) +
+  geom_boxplot() +
+  labs(title = "Energy vs Top 100 status") +
+  theme_minimal()
+
+ggplot(tracks_filtered, aes(x = top_100, y = loudness, fill = top_100)) +
+  geom_boxplot() +
+  labs(title = "Loudness vs Top 100 status") +
+  theme_minimal()
+
+ggplot(tracks_filtered, aes(x = top_100, y = speechiness, fill = top_100)) +
+  geom_boxplot() +
+  labs(title = "Speechiness vs Top 100 status") +
+  theme_minimal()
+
+ggplot(tracks_filtered, aes(x = top_100, y = acousticness, fill = top_100)) +
+  geom_boxplot() +
+  labs(title = "Acousticness vs Top 100 status") +
+  theme_minimal()
+
+ggplot(tracks_filtered, aes(x = top_100, y = liveness, fill = top_100)) +
+  geom_boxplot() +
+  labs(title = "Liveness vs Top 100 status") +
+  theme_minimal()
+
+ggplot(tracks_filtered, aes(x = top_100, y = tempo, fill = top_100)) +
+  geom_boxplot() +
+  labs(title = "Tempo vs Top 100 status") +
+  theme_minimal()
+
+ggplot(tracks_filtered, aes(x = top_100, y = time_signature, fill = top_100)) +
+  geom_boxplot() +
+  labs(title = "Time Signature vs Top 100 status") +
+  theme_minimal()
+
+
+
 knn_recipe <- recipe(top_100 ~ duration_ms + explicit + danceability + energy +
                        loudness + speechiness + acousticness + liveness +
                        valence + track_genre,
@@ -157,4 +214,5 @@ ggplot(roc_df, aes(x = 1 - specificity, y = sensitivity)) +
     panel.grid.major = element_line(color = "#000050"),               # Gridline color
     panel.grid.minor = element_blank()
   )
+
 
