@@ -28,8 +28,8 @@ set.seed(100)
 outside <- tracks_csv |>
   filter(!track_name %in% charts$song) |>
   sample_n(2000) |>
-  mutate(top_100 = 0)
-  sample_n(8918) |>
+  mutate(top_100 = 0) |>
+  sample_n(2000) |>
   mutate(top_100 = 0)
 
 # Combine data frames
@@ -127,12 +127,4 @@ ggplot(cm_df, aes(x = Prediction, y = Truth, fill = Freq)) +
   theme_minimal()
 
 
-knn_recipe <- recipe(top_100 ~ duration_ms, data = tracks_filtered) |> 
-  step_normalize(all_numeric_predictors())
-knn_mdl <- nearest_neighbor(mode = "classification", neighbors = 3)
-
-knn_out <- workflow() |> 
-  add_recipe(knn_recipe) |> 
-  add_model(knn_mdl) |> 
-  fit(data = tracks_filtered)
 
