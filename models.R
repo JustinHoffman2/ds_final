@@ -105,8 +105,8 @@ accuracy(preds, truth = top_100, estimate = .pred_class)
 cm <- conf_mat(preds, truth = top_100, estimate = .pred_class)
 
 
-metrics(preds, truth = top_100, estimate = .pred_class)
-print(metrics)
+print(metrics(preds, truth = top_100, estimate = .pred_class))
+
 
 library(yardstick)
 library(ggplot2)
@@ -124,55 +124,13 @@ ggplot(cm_df, aes(x = Prediction, y = Truth, fill = Freq)) +
   geom_text(aes(label = Freq), size = 5) +
   scale_fill_gradient(low = "white", high = "steelblue") +
   labs(
-    title = "Confusion Matrix",
+    title = "Confusion Matrix KNN",
     x = "Predicted Class",
     y = "Actual Class",
     fill = "Count"
   ) +
   theme_minimal()
 
-xgb_mdl <- boost_tree(
-  mode = "classification",
-  trees = 1000,
-  tree_depth = 6,
-  learn_rate = 0.1,
-  loss_reduction = 0.01) |> 
-  set_engine("xgboost")
-
-xgb_recipe <- recipe(top_100 ~ duration_ms + explicit + danceability + energy +
-                       loudness + speechiness + acousticness + liveness +
-                       valence + track_genre,
-                     data = df_trn) |> 
-  step_dummy(all_nominal_predictors()) |> 
-  step_zv() |> 
-  step_normalize(all_numeric_predictors())
-
-xgb_wf <- workflow() |> 
-  add_recipe(xgb_recipe) |> 
-  add_model(xgb_mdl)
-
-xgb_fit <- fit(xgb_wf, data = df_trn)
-
-xgb_preds <- predict(xgb_fit, new_data = df_test, type = "class") |> 
-  bind_cols(df_test)
-
-# Accuracy
-accuracy(xgb_preds, truth = top_100, estimate = .pred_class)
-
-# Confusion matrix
-conf_mat(xgb_preds, truth = top_100, estimate = .pred_class)
-
-ggplot(cm_df, aes(x = Prediction, y = Truth, fill = Freq)) +
-  geom_tile(color = "white") +
-  geom_text(aes(label = Freq), size = 5) +
-  scale_fill_gradient(low = "white", high = "steelblue") +
-  labs(
-    title = "Confusion Matrix XGBoost",
-    x = "Predicted Class",
-    y = "Actual Class",
-    fill = "Count"
-  ) +
-  theme_minimal()
 
 
 

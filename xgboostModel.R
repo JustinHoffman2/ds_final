@@ -34,7 +34,7 @@ outside <- tracks_csv |>
 tracks <- rbind(inside, outside)
 print(tracks['top_100'])
 tracks <- tracks |> arrange(track_name)
-print(tracks)
+
 
 
 
@@ -55,7 +55,7 @@ tracks_filtered <- tracks |>
   select(-all_of(removed_features))
 
 
-print(tracks_filtered)
+
 
 library(tidymodels) 
 
@@ -95,7 +95,10 @@ xgb_fit <- fit(xgb_wf, data = df_trn)
 xgb_preds <- predict(xgb_fit, new_data = df_test, type = "class") |> 
   bind_cols(df_test)
 
-accuracy(xgb_preds, truth = top_100, estimate = .pred_class)
+print(xgb_preds)
+
+acc <- accuracy(xgb_preds, truth = top_100, estimate = .pred_class)
+print(acc)
 
 cm <- conf_mat(xgb_preds, truth = top_100, estimate = .pred_class)
 cm_df <- as.data.frame(cm$table)
@@ -113,3 +116,37 @@ ggplot(cm_df, aes(x = Prediction, y = Truth, fill = Freq)) +
   theme_minimal()
 
 
+
+library(pROC)
+
+xgb_probs <- predict(xgb_fit, new_data = df_test, type = "prob") |> 
+  bind_cols(df_test)
+
+# Generate ROC curve data
+roc_df <- roc_curve(xgb_probs, truth = top_100, .pred_0)
+# Plot ROC
+ggplot(roc_df, aes(x = 1 - specificity, y = sensitivity)) +
+  geom_path(color = "blue", linewidth = 1.2) +
+  geom_abline(linetype = "dashed", color = "gray") +
+  coord_equal() +
+  labs(
+    title = "ROC Curve for XGBoost Model",
+    x = "False Positive Rate",
+    y = "True Positive Rate"
+  ) +
+  theme_minimal()
+
+new_song <- tibble(
+  duration_ms = 210000,
+  explicit = factor("FALSE", levels = c("FALSE", "TRUE")),
+  danceability = 0.75,
+  energy = 0.85,
+  loudness = -5.0,
+  speechiness = 0.045,
+  acousticness = 0.02,
+  liveness = 0.1,
+  valence = 0.6,
+  track_genre = factor("pop", levels = levels(df_trn$track_genre))  # match training levels
+)
+
+print(predict(xgb_fit, new_data = new_song))
